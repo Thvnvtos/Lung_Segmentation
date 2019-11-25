@@ -4,9 +4,9 @@ import torch
 
 import dataset, model
 
-labelle_path = "../list_good_v2.pickle"
+labelled_path = "../list_good_v2.pickle"
 
-with open("../list_good_v2.pickle", "rb") as f:
+with open(labelled_path, "rb") as f:
   list_scans = pickle.load(f)
 
 st_scans = [s.split('/')[1] for s in list_scans]
