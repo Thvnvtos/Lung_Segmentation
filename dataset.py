@@ -31,6 +31,10 @@ class Dataset(data.Dataset):
 
     ct_scan = nrrd_scan[0]
     mask = seg_mask
+    mask[mask == 5] = 0
+    mask[mask > 0] = 1
+    mask = mask.astype(np.int8)
+    z_shape = mask.shape[0]
 
-    return np.swapaxes(ct_scan, 0, 2), mask
+    return np.swapaxes(ct_scan, 0, 2)[np.newaxis,z_shape//2 - 8:z_shape//2 + 8], mask[np.newaxis,z_shape//2 - 8:z_shape//2 + 8]
 

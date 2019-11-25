@@ -52,7 +52,12 @@ class DecoderUnit(nn.Module):
     self.convTranspose = nn.ConvTranspose3d(in_channels // 2, out_channels, kernel_size = 2, stride = 2)
 
   def forward(self, x1, x2):
-    print("Concatenating : ", x2.shape, x1.shape)
+    #print("Concatenating : ", x2.shape, x1.shape)
+    diffZ = x2.size()[2] - x1.size()[2]
+    diffY = x2.size()[3] - x1.size()[3]
+    diffX = x2.size()[4] - x1.size()[4]
+    #print(diffZ, diffY, diffX)
+    x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2,diffZ // 2, diffZ - diffZ // 2])
     x = torch.cat([x2, x1], dim = 1)  # Verify on runtime need change
     x = self.convUnit(x)
     return self.convTranspose(x)
@@ -80,11 +85,10 @@ class OutputUnit(nn.Module):
     self.outConv = nn.Conv3d(in_channels // 2, out_channels, kernel_size = 1)
   
   def forward(self, x1, x2):
-    print("Concatenating : ", x2.shape, x1.shape)
+    #print("Concatenating : ", x2.shape, x1.shape)
     x = torch.cat([x2, x1], dim = 1)  # Verify on runtime need change    print(x.shape)
     x = self.convUnit(x)
-    print(x.shape)
-    return self.outConv(x)
+    return self.outConv(x).int()
 
 
 ###########   Model : 
@@ -111,13 +115,13 @@ class UNet(nn.Module):
 
   def forward(self, x):
     skip_x1, x1 = self.enc1(x)
-    print(x1.shape, skip_x1.shape)
+    #print(x1.shape, skip_x1.shape)
     skip_x2, x2 = self.enc2(x1)
-    print(x2.shape, skip_x2.shape)
+    #print(x2.shape, skip_x2.shape)
     skip_x3, x3 = self.enc3(x2)
-    print(x3.shape, skip_x3.shape)
+    #print(x3.shape, skip_x3.shape)
     skip_x4, x4 = self.enc4(x3)
-    print(x4.shape, skip_x4.shape)
+    #print(x4.shape, skip_x4.shape)
 
     mid = self.mid(x4)
 
