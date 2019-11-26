@@ -4,28 +4,23 @@ import torch
 from torch.utils import data
 import torch.optim as optim
 import torch.nn as nn
+from torch.nn import functional as F
 
 import dataset, model
 
 
-SMOOTH = 1e-6
-
-def iou(outputs: torch.Tensor, labels: torch.Tensor):
-    outputs = outputs.squeeze(1)
-    labels = labels.squeeze(1).int()
-    print(labels.type())
-    intersection = (outputs & labels).float().sum((1,2,3))
-    union = (outputs | labels).float().sum((1,2,3))
-
-    iou = (intersection + SMOOTH) / (union + SMOOTH)
-
-    thresholded = torch.clamp(20 * (iou - 0.5), 0, 10).ceil() / 10
-    return thresholded
+def dice_loss(output, labels, eps=1e-7):
+  '''
+    output, labels shape : [B, 1, Z, Y, X]
+  '''
+  num = 2. * torch.sum(output * labels)
+  denom = torch.sum(output**2 + labels**2)
+  return 1 - torch.mean(num / (denom + eps)) 
 
 
 
 
-labelled_path = "/powerai/data/retina-unet/data/labelled.pickle"
+labelled_path = "/home/ilyass/retina_unet/list_good_v2.pickle"
 
 with open(labelled_path, "rb") as f:
   list_scans = pickle.load(f)
@@ -33,8 +28,8 @@ with open(labelled_path, "rb") as f:
 st_scans = [s.split('/')[1] for s in list_scans]
 
 st_scans = st_scans[:50]
-scans_path = "/powerai/data/retina-unet/data/LIDC-IDRI_1-100"
-masks_path = "/powerai/data/retina-unet/data/lung_masks_LUNA16"
+scans_path = "/home/ilyass/retina_unet/LIDC_IDRI_1-1012(no238-584)"
+masks_path = "/home/ilyass/retina_unet/seg-lungs-LUNA16"
 
 params = {"batch_size": 1, "shuffle": True, "num_workers": 8}
 
@@ -45,28 +40,34 @@ device = torch.device("cuda:0")
 unet = model.UNet(1,1,8).to(device)
 
 criterion = nn.MSELoss()
-optimizer = optim.RMSprop(unet.parameters(), lr = 0.01, weight_decay=1e-8)
+optimizer = optim.RMSprop(unet.parameters(), lr = 0.001, weight_decay=1e-8)
 
 for epoch in range(20):
     
     running_loss = 0
     for batch, labels in data_gen:
     
-        print(batch.type())
-        print(labels.type())
-        print("############################## \n \n \n")
         batch = batch.to(device)
-        labels = batch.to(device).int()
-        
+        labels = labels.float().to(device)
+        labels.requires_grad = True
         optimizer.zero_grad()
-        preds = unet(batch).float()
-        print(preds.type())
-        loss = criterion(preds, labels.float())
-        loss.requires_grad=True
+        preds = unet(batch)
+        #print("######################### Preds : ")
+        #print(preds.shape)
+        #print(preds.type())
+        #print(preds.max())
+        #print(preds.min())
+        #print("######################### labels : ")
+        #print(labels.shape)
+        #print(labels.type())
+        #print(preds.max())
+        #print(preds.min())
+        #print("\n\n##########\n")
+        loss = dice_loss(labels, preds)
         loss.backward()
         optimizer.step()
 
         running_loss += loss.item()
-        print(running_loss)
+        print("here : " ,loss.item())
     print("epoch : ", epoch)
     print(running_loss/50)

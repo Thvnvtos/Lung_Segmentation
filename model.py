@@ -88,7 +88,10 @@ class OutputUnit(nn.Module):
     #print("Concatenating : ", x2.shape, x1.shape)
     x = torch.cat([x2, x1], dim = 1)  # Verify on runtime need change    print(x.shape)
     x = self.convUnit(x)
-    return self.outConv(x).int()
+    x = self.outConv(x)
+    x[x > 0.5] = 1
+    x[x <= 0.5] = 0
+    return x
 
 
 ###########   Model : 
