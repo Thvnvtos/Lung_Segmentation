@@ -6,20 +6,10 @@ import torch.optim as optim
 import torch.nn as nn
 from torch.nn import functional as F
 
-import dataset, model
+import dataset, model, utils
 
-
-def dice_loss(output, labels, eps=1e-7):
-  '''
-    output, labels shape : [B, 1, Z, Y, X]
-  '''
-  num = 2. * torch.sum(output * labels)
-  denom = torch.sum(output**2 + labels**2)
-  return 1 - torch.mean(num / (denom + eps)) 
-
-
-
-
+scans_path = "/home/ilyass/retina_unet/LIDC_IDRI_1-1012(no238-584)"
+masks_path = "/home/ilyass/retina_unet/seg-lungs-LUNA16"
 labelled_path = "/home/ilyass/retina_unet/list_good_v2.pickle"
 
 with open(labelled_path, "rb") as f:
@@ -27,47 +17,40 @@ with open(labelled_path, "rb") as f:
 
 st_scans = [s.split('/')[1] for s in list_scans]
 
-st_scans = st_scans[:50]
-scans_path = "/home/ilyass/retina_unet/LIDC_IDRI_1-1012(no238-584)"
-masks_path = "/home/ilyass/retina_unet/seg-lungs-LUNA16"
-
-params = {"batch_size": 1, "shuffle": True, "num_workers": 8}
+st_scans = st_scans[:30]
 
 dataset = dataset.Dataset(st_scans, scans_path, masks_path)
-data_gen = data.DataLoader(dataset, **params)
 
 device = torch.device("cuda:0")
-unet = model.UNet(1,1,8).to(device)
 
-criterion = nn.MSELoss()
-optimizer = optim.RMSprop(unet.parameters(), lr = 0.001, weight_decay=1e-8)
+unet = model.UNet(1,1, 32).to(device)
 
-for epoch in range(20):
-    
-    running_loss = 0
-    for batch, labels in data_gen:
-    
-        batch = batch.to(device)
-        labels = labels.float().to(device)
-        labels.requires_grad = True
-        optimizer.zero_grad()
-        preds = unet(batch)
-        #print("######################### Preds : ")
-        #print(preds.shape)
-        #print(preds.type())
-        #print(preds.max())
-        #print(preds.min())
-        #print("######################### labels : ")
-        #print(labels.shape)
-        #print(labels.type())
-        #print(preds.max())
-        #print(preds.min())
-        #print("\n\n##########\n")
-        loss = dice_loss(labels, preds)
-        loss.backward()
-        optimizer.step()
+criterion = utils.dice_loss
+optimizer = optim.Adam(unet.parameters(), lr = 0.001)
 
-        running_loss += loss.item()
-        print("here : " ,loss.item())
-    print("epoch : ", epoch)
-    print(running_loss/50)
+batch_size = 1
+slices_per_batch = 4
+
+for epoch in range(1):
+  epoch_loss = 0
+  for i in range(0, len(dataset), batch_size):
+    batch_loss = 0
+    batch = np.concatenate([dataset.__getitem__(j)[0] for j in range(i, i+batch_size)]).astype(np.float16)
+    labels = np.concatenate([dataset.__getitem__(j)[1] for j in range(i, i+batch_size)]).astype(np.float16)
+
+    slices = np.random.randint(0, len(batch), slices_per_batch)
+
+    batch = torch.Tensor(batch[slices]).to(device)
+    labels = torch.Tensor(labels[slices]).to(device)
+    batch.requires_grad = True
+    labels.requires_grad = True
+
+    optimizer.zero_grad()
+    logits = unet(batch)
+    loss = criterion(logits, labels)
+    loss.backward()
+    optimizer.step()
+
+    print("Batch mean loss : ", loss.item()/batch_size)
+    epoch_loss += loss.item()/batch_size
+  print("=========> Epoch {} : {}".format(epoch+1, epoch_loss/(len(dataset)/batch_size)))
