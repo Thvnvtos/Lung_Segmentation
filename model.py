@@ -3,8 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-# Work on Middle Layer and output layer, then construct the model
-
 
 class ConvUnit(nn.Module):
   """
