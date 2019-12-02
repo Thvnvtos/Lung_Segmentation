@@ -29,7 +29,6 @@ class ConvUnit(nn.Module):
 
 
 
-
 class EncoderUnit(nn.Module):
   """
     An Encoder Unit with the ConvUnit and MaxPool

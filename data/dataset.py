@@ -4,7 +4,7 @@ from glob import glob
 import torch
 from torch.utils import data
 
-from utils import load_itk
+from . import utils
 
 class Dataset(data.Dataset):
   """
@@ -29,12 +29,48 @@ class Dataset(data.Dataset):
     path = os.path.join(self.scans_path, scan, '*', '*')
     scan_dicom_id = os.path.basename(glob(path)[0])   # used to find the corresponding lung mask 
     nrrd_scan = nrrd.read(glob(os.path.join(path, "*CT.nrrd"))[0])   # tuple containing the CT scan and some metadata
-    seg_mask, _, _ = load_itk(os.path.join(self.masks_path, scan_dicom_id + ".mhd"))  # function uses SimpleITK to load lung masks from mhd/zraw data
-
     ct_scan = np.swapaxes(nrrd_scan[0], 0, 2)
-    mask = seg_mask
-    mask[mask == 5] = 0
-    mask[mask > 0] = 1
-    n_slices = mask.shape[0]
+    seg_mask, _, _ = utils.load_itk(os.path.join(self.masks_path, scan_dicom_id + ".mhd"))  # function uses SimpleITK to load lung masks from mhd/zraw data
 
-    return ct_scan[:, np.newaxis, :], mask[:, np.newaxis, :]
+    seg_mask[seg_mask == 5] = 0
+    seg_mask[seg_mask > 0] = 1
+
+    return ct_scan[:, np.newaxis, :], seg_mask[:, np.newaxis, :]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
