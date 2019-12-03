@@ -1,5 +1,5 @@
 import numpy as np
-import nrrd, os
+import nrrd, os, scipy.ndimage
 from glob import glob
 import torch
 from torch.utils import data
@@ -35,42 +35,17 @@ class Dataset(data.Dataset):
     seg_mask[seg_mask == 5] = 0
     seg_mask[seg_mask > 0] = 1
 
-    return ct_scan[:, np.newaxis, :], seg_mask[:, np.newaxis, :]
+    ct_scan_resized = []
+    seg_mask_resized =[]
 
+    for i in range(len(ct_scan)):
+      ct_scan_resized.append(scipy.ndimage.interpolation.zoom(ct_scan[i], [.25, .25], mode = "nearest"))
+      seg_mask_resized.append(scipy.ndimage.interpolation.zoom(seg_mask[i], [.25, .25], mode = "nearest"))
+    ct_scan = np.array(ct_scan_resized)
+    seg_mask = np.array(seg_mask_resized)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    if self.mode == "2d":
+      return ct_scan[:, np.newaxis, :], seg_mask[:, np.newaxis, :]
+    else:
+      return ct_scan[np.newaxis, :], seg_mask[np.newaxis, :]
 

@@ -7,7 +7,7 @@ import torch.nn.functional as F
 class ConvUnit(nn.Module):
   """
     Convolution Unit -
-    for  now : (Conv2D -> BatchNorm -> ReLu) * 2
+    for  now : (Conv3D -> BatchNorm -> ReLu) * 2
     Try modifying to Residual convolutions
   """
 
@@ -15,12 +15,12 @@ class ConvUnit(nn.Module):
     super(ConvUnit, self).__init__()
     self.double_conv = nn.Sequential(
 
-        nn.Conv2d(in_channels, out_channels, kernel_size = 3, padding = 1),
-        nn.BatchNorm2d(out_channels),
+        nn.Conv3d(in_channels, out_channels, kernel_size = 3, padding = 1),
+        nn.BatchNorm3d(out_channels),
         nn.ReLU(inplace=True), # inplace=True means it changes the input directly, input is lost
 
-        nn.Conv2d(out_channels, out_channels, kernel_size = 3, padding = 1),
-        nn.BatchNorm2d(out_channels),
+        nn.Conv3d(out_channels, out_channels, kernel_size = 3, padding = 1),
+        nn.BatchNorm3d(out_channels),
         nn.ReLU(inplace=True)
       )
 
@@ -36,11 +36,12 @@ class EncoderUnit(nn.Module):
   def __init__(self, in_channels, out_channels):
     super(EncoderUnit, self).__init__()
     self.encoder = nn.Sequential(
-        nn.MaxPool2d(2),
+        nn.MaxPool3d(2),
         ConvUnit(in_channels, out_channels)
     )
   def forward(self, x):
     return self.encoder(x)
+
 
 class DecoderUnit(nn.Module):
   """
@@ -53,7 +54,7 @@ class DecoderUnit(nn.Module):
     if bilinear:
       self.up = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
     else:
-      self.up = nn.ConvTranspose2d(in_channels // 2, in_channels // 2, kernel_size=2, stride=2)
+      self.up = nn.ConvTranspose3d(in_channels // 2, in_channels // 2, kernel_size=2, stride=2)
 
     self.conv = ConvUnit(in_channels, out_channels)
 
@@ -61,9 +62,10 @@ class DecoderUnit(nn.Module):
 
       x1 = self.up(x1)
 
-      diffY = x2.size()[2] - x1.size()[2]
-      diffX = x2.size()[3] - x1.size()[3]
-      x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2])
+      diffZ = x2.size()[2] - x1.size()[2]
+      diffY = x2.size()[3] - x1.size()[3]
+      diffX = x2.size()[4] - x1.size()[4]
+      x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2, diffZ // 2, diffZ - diffZ // 2])
 
       x = torch.cat([x2, x1], dim=1)
       return self.conv(x)
@@ -71,7 +73,7 @@ class DecoderUnit(nn.Module):
 class OutConv(nn.Module):
   def __init__(self, in_channels, out_channels):
     super(OutConv, self).__init__()
-    self.conv = nn.Conv2d(in_channels, out_channels, kernel_size = 1)
+    self.conv = nn.Conv3d(in_channels, out_channels, kernel_size = 1)
 
   def forward(self, x):
     return self.conv(x)

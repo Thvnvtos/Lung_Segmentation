@@ -21,8 +21,7 @@ with open(config["path"]["labelled_list"], "rb") as f:
 st_scans = [s.split('/')[1] for s in list_scans]
 st_scans = st_scans[:30]
 
-dataset = dataset.Dataset(st_scans, config["path"]["scans"], config["path"]["masks"])
-
+dataset = dataset.Dataset(st_scans, config["path"]["scans"], config["path"]["masks"], mode = "3d")
 unet = model.UNet(1,1, config["train"]["start_filters"]).to(device)
 
 criterion = utils.dice_loss
@@ -36,17 +35,11 @@ for epoch in range(config["train"]["epochs"]):
   epoch_loss = 0
   for i in range(0, len(dataset), scans_per_batch):
     batch_loss = 0
-    batch = np.concatenate([dataset.__getitem__(j)[0] for j in range(i, i+scans_per_batch)]).astype(np.float16)
-    labels = np.concatenate([dataset.__getitem__(j)[1] for j in range(i, i+scans_per_batch)]).astype(np.float16)
+    batch = np.array([dataset.__getitem__(j)[0] for j in range(i, i+scans_per_batch)]).astype(np.float16)
+    labels = np.array([dataset.__getitem__(j)[1] for j in range(i, i+scans_per_batch)]).astype(np.float16)
 
-    slices = np.random.randint(0, len(batch), slices_per_batch - neg)
-    neg_down = np.random.randint(len(batch) - 16, len(batch), neg // 2)
-    neg_up = np.random.randint(len(batch) - 16, len(batch), neg // 2)
-
-    slices = np.concatenate([slices, neg_down, neg_up])
-
-    batch = torch.Tensor(batch[slices]).to(device)
-    labels = torch.Tensor(labels[slices]).to(device)
+    batch = torch.Tensor(batch).to(device)
+    labels = torch.Tensor(labels).to(device)
     batch.requires_grad = True
     labels.requires_grad = True
 
