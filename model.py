@@ -48,12 +48,11 @@ class DecoderUnit(nn.Module):
     ConvUnit and upsample with Upsample or convTranspose
 
   """
-  def __init__(self, in_channels, out_channels, bilinear=True):
+  def __init__(self, in_channels, out_channels, bilinear=False):
     super().__init__()
-  
-    bilinear = False
-    
+
     if bilinear:
+      # Only for 2D model
       self.up = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
     else:
       self.up = nn.ConvTranspose3d(in_channels // 2, in_channels // 2, kernel_size=2, stride=2)
@@ -87,7 +86,7 @@ class OutConv(nn.Module):
 
 class UNet(nn.Module):
 
-  def __init__(self, in_channels, n_classes, s_channels, bilinear = True):
+  def __init__(self, in_channels, n_classes, s_channels, bilinear = False):
     super(UNet, self).__init__()
     self.in_channels = in_channels
     self.n_classes = n_classes
@@ -100,10 +99,10 @@ class UNet(nn.Module):
     self.enc3 = EncoderUnit(4 * s_channels, 8 * s_channels)
     self.enc4 = EncoderUnit(8 * s_channels, 8 * s_channels)
 
-    self.dec1 = DecoderUnit(16 * s_channels, 4 * s_channels)
-    self.dec2 = DecoderUnit(8 * s_channels, 2 * s_channels)
-    self.dec3 = DecoderUnit(4 * s_channels, s_channels)
-    self.dec4 = DecoderUnit(2 * s_channels, s_channels)
+    self.dec1 = DecoderUnit(16 * s_channels, 4 * s_channels, self.bilinear)
+    self.dec2 = DecoderUnit(8 * s_channels, 2 * s_channels, self.bilinear)
+    self.dec3 = DecoderUnit(4 * s_channels, s_channels, self.bilinear)
+    self.dec4 = DecoderUnit(2 * s_channels, s_channels, self.bilinear)
     self.out = OutConv(s_channels, n_classes)
 
   def forward(self, x):
