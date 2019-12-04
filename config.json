@@ -2,9 +2,9 @@
   "mode" : "3d",
   "path" :
     {
-      "scans" : "/home/ilyass/retina_unet/LIDC_IDRI_1-1012(no238-585)",
-      "masks" : "/home/ilyass/retina_unet/seg-lungs-LUNA16",
-      "labelled_list" : "/home/ilyass/retina_unet/list_good_v2.pickle"
+      "scans" : "/powerai/data/retina-unet/data/LIDC-IDRI",
+      "masks" : "/powerai/data/retina-unet/data/lung_masks_LUNA16",
+      "labelled_list" : "/powerai/data/retina-unet/data/labelled.pickle"
     },
 
   "train3d" :
@@ -12,11 +12,11 @@
       "epochs" : 10,
       "batch_size" : 1,
       "lr" : 1e-4,
-      "start_filters" : 8,
-      "scan_size" : [64, 128, 128],
-      "train_size" : 64,
-      "validation_steps" : 5,
-      "validation_size" : 2
+      "start_filters" : 32,
+      "scan_size" : [128, 256, 256],
+      "train_size" : 700,
+      "validation_steps" : 30,
+      "validation_size" : 30
     },
 
   "train2d" :

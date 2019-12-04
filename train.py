@@ -63,25 +63,27 @@ for epoch in range(epochs):
     loss = criterion(logits, labels)
     loss.backward()
     optimizer.step()
-    print("Batch mean loss : ", loss.item()/batch_size)
+    print("Epoch {} ==> Batch {} mean loss : {}".format(epoch+1, (i+1)%(val_steps + 1), loss.item()/batch_size))
     epoch_loss += loss.item()/batch_size
     if (i+1)%val_steps == 0:
+      print("===================> Calculating validation loss ... ")
       ids = np.random.randint(0, len(val_data), val_size)
       val_loss = 0
       for scan_id in ids:
-        batch = np.array([val_data.__getitem__(j)[0] for j in range(i, i+batch_size)]).astype(np.float16)
-        labels = np.array([val_data.__getitem__(j)[1] for j in range(i, i+batch_size)]).astype(np.float16)
+        batch = np.array([val_data.__getitem__(j)[0] for j in range(scan_id, scan_id+batch_size)]).astype(np.float16)
+        labels = np.array([val_data.__getitem__(j)[1] for j in range(scan_id, scan_id+batch_size)]).astype(np.float16)
         batch = torch.Tensor(batch).to(device)
         labels = torch.Tensor(labels).to(device)
         logits = unet(batch)
         loss = criterion(logits, labels)
         val_loss += loss.item()
       val_loss /= val_size
-      print("============> Validation Loss : ", val_loss)
+      print("\n # Validation Loss : ", val_loss)
       if val_loss < best_val_loss:
-        print("Saving Better Model")
+        print("\nSaving Better Model... ")
         torch.save(unet.state_dict(), "./model")
         best_val_loss = val_loss
+      print("\n")
   # Print Here Epoch loss and Val loss 
   #print("=========> Epoch {} : {}".format(epoch+1, epoch_loss/(len(dataset)/batch_size)))
 
