@@ -35,15 +35,19 @@ class Dataset(data.Dataset):
     seg_mask[seg_mask == 5] = 0
     seg_mask[seg_mask > 0] = 1
 
-    ct_scan_resized = []
+    """ct_scan_resized = []
     seg_mask_resized =[]
-
+      
     for i in range(len(ct_scan)):
       ct_scan_resized.append(scipy.ndimage.interpolation.zoom(ct_scan[i], [.25, .25], mode = "nearest"))
       seg_mask_resized.append(scipy.ndimage.interpolation.zoom(seg_mask[i], [.25, .25], mode = "nearest"))
     ct_scan = np.array(ct_scan_resized)
     seg_mask = np.array(seg_mask_resized)
-
+    """
+    
+    ct_scan = scipy.ndimage.interpolation.zoom(ct_scan, [128./float(len(ct_scan)) ,.5, .5], mode = "nearest")
+    seg_mask = scipy.ndimage.interpolation.zoom(seg_mask, [128./float(len(seg_mask)) ,.5, .5], mode = "nearest")
+    
     if self.mode == "2d":
       return ct_scan[:, np.newaxis, :], seg_mask[:, np.newaxis, :]
     else:

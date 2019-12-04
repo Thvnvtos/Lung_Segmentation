@@ -9,6 +9,8 @@ from torch.nn import functional as F
 import model
 from data import *
 
+torch.backends.cudnn.benchmark = True
+
 
 with open("config.json") as f:
   config = json.load(f)
@@ -19,10 +21,10 @@ with open(config["path"]["labelled_list"], "rb") as f:
   list_scans = pickle.load(f)
 
 st_scans = [s.split('/')[1] for s in list_scans]
-st_scans = st_scans[:30]
+st_scans = st_scans[:500]
 
 dataset = dataset.Dataset(st_scans, config["path"]["scans"], config["path"]["masks"], mode = "3d")
-unet = model.UNet(1,1, config["train"]["start_filters"]).to(device)
+unet = model.UNet(1,1, config["train"]["start_filters"], bilinear = False).to(device)
 
 criterion = utils.dice_loss
 optimizer = optim.Adam(unet.parameters(), lr = config["train"]["lr"])
@@ -48,11 +50,10 @@ for epoch in range(config["train"]["epochs"]):
     loss = criterion(logits, labels)
     loss.backward()
     optimizer.step()
-
+    print(batch.size())
     print("Batch mean loss : ", loss.item()/scans_per_batch)
     epoch_loss += loss.item()/scans_per_batch
+    if i%30 == 0:
+      torch.save(unet.state_dict(), "./model")
   print("=========> Epoch {} : {}".format(epoch+1, epoch_loss/(len(dataset)/scans_per_batch)))
-  if epoch_loss < 0.04:
-    break
-
-torch.save(unet.state_dict(), "./model")
+  

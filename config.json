@@ -1,18 +1,18 @@
 { 
   "path" :
     {
-      "scans" : "/home/ilyass/retina_unet/LIDC_IDRI_1-1012(no238-585)",
-      "masks" : "/home/ilyass/retina_unet/seg-lungs-LUNA16",
-      "labelled_list" : "/home/ilyass/retina_unet/list_good_v2.pickle"
+      "scans" : "/powerai/data/retina-unet/data/LIDC-IDRI",
+      "masks" : "/powerai/data/retina-unet/data/lung_masks_LUNA16",
+      "labelled_list" : "/powerai/data/retina-unet/data/labelled.pickle"
     },
 
   "train" :
     {
-      "epochs" : 1,
+      "epochs" : 10,
       "scans_per_batch" : 1,
       "slices_per_batch" : 4,
       "neg_examples_per_batch" : 0,
-      "lr" : 1e-3,
+      "lr" : 1e-4,
       "start_filters" : 32
     }
 }

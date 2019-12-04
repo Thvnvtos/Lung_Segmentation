@@ -50,7 +50,9 @@ class DecoderUnit(nn.Module):
   """
   def __init__(self, in_channels, out_channels, bilinear=True):
     super().__init__()
-
+  
+    bilinear = False
+    
     if bilinear:
       self.up = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
     else:

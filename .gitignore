@@ -1,4 +1,4 @@
 __pycache__/
-Untitled.ipynb
-.ipynb_checkpoints
-.gi
+.ipynb_checkpoints/
+mask3D.nrrd
+model
