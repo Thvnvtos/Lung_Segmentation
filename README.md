@@ -9,4 +9,4 @@ And for the lung masks, LUNA16 lung segmentation is used
 
 # Current results example :
 
-![lung segmentation example](https://github.com/Thvnvtos/Lung_Segmentation/blob/master/images/example_segmentation.png?raw=true)
+![lung segmentation example](https://github.com/Thvnvtos/Lung_Segmentation/blob/unet3d/readme_images/example_segmentation.png?raw=true)
