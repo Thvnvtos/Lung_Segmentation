@@ -16,7 +16,8 @@
       "scan_size" : [128, 256, 256],
       "train_size" : 700,
       "validation_steps" : 30,
-      "validation_size" : 30
+      "validation_size" : 30,
+      "n_classes" : 3
     },
 
   "train2d" :

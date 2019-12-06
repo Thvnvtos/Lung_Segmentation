@@ -25,9 +25,9 @@ st_scans = [s.split('/')[1] for s in list_scans]
 if config["mode"] == "3d":
   train_scans = st_scans[:config["train3d"]["train_size"]]
   val_scans = st_scans[config["train3d"]["train_size"]:]
-  train_data = dataset.Dataset(train_scans, config["path"]["scans"], config["path"]["masks"], mode="3d", scan_size = config["train3d"]["scan_size"])
+  train_data = dataset.Dataset(train_scans, config["path"]["scans"], config["path"]["masks"], mode="3d", scan_size = config["train3d"]["scan_size"], n_classes = config["train3d"]["n_classes"])
   val_data = dataset.Dataset(val_scans, config["path"]["scans"], config["path"]["masks"], mode = "3d", scan_size = config["train3d"]["scan_size"])
-  unet = model.UNet(1,1, config["train3d"]["start_filters"], bilinear = False).to(device)
+  unet = model.UNet(1,config["train3d"]["n_classes"], config["train3d"]["start_filters"], bilinear = False).to(device)
   criterion = utils.dice_loss
   optimizer = optim.Adam(unet.parameters(), lr = config["train3d"]["lr"])
   batch_size = config["train3d"]["batch_size"]
@@ -63,7 +63,7 @@ for epoch in range(epochs):
     loss = criterion(logits, labels)
     loss.backward()
     optimizer.step()
-    print("Epoch {} ==> Batch {} mean loss : {}".format(epoch+1, (i+1)%(val_steps + 1), loss.item()/batch_size))
+    print("Epoch {} ==> Batch {} mean loss : {}".format(epoch+1, (i+1)%(val_steps), loss.item()/batch_size))
     epoch_loss += loss.item()/batch_size
     if (i+1)%val_steps == 0:
       print("===================> Calculating validation loss ... ")

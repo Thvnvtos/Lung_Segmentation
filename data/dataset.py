@@ -12,12 +12,13 @@ class Dataset(data.Dataset):
     scans_path and masks_path are the paths of the folders containing the data
     mode : 2d will return slices
   """
-  def __init__(self, list_scans, scans_path, masks_path, mode = "3d", scan_size = [128, 256, 256] ):
+  def __init__(self, list_scans, scans_path, masks_path, mode = "3d", scan_size = [128, 256, 256], n_classes = 1):
     self.list_scans = list_scans
     self.scans_path = scans_path
     self.masks_path = masks_path
     self.mode = mode
     self.scan_size = scan_size
+    self.n_classes = n_classes
 
   def __len__(self):
     return len(self.list_scans)
@@ -33,17 +34,15 @@ class Dataset(data.Dataset):
     ct_scan = np.swapaxes(nrrd_scan[0], 0, 2)
     seg_mask, _, _ = utils.load_itk(os.path.join(self.masks_path, scan_dicom_id + ".mhd"))# function uses SimpleITK to load lung masks from mhd/zraw data
 
-    seg_mask[seg_mask == 5] = 0
-    seg_mask[seg_mask > 0] = 1
-
-    """ct_scan_resized = []
-    seg_mask_resized =[]
-    for i in range(len(ct_scan)):
-      ct_scan_resized.append(scipy.ndimage.interpolation.zoom(ct_scan[i], [.25, .25], mode = "nearest"))
-      seg_mask_resized.append(scipy.ndimage.interpolation.zoom(seg_mask[i], [.25, .25], mode = "nearest"))
-    ct_scan = np.array(ct_scan_resized)
-    seg_mask = np.array(seg_mask_resized)
-    """
+    if self.n_classes == 3:
+      seg_mask[seg_mask == 3] = 1
+      seg_mask[seg_mask == 4] = 2
+      seg_mask[seg_mask == 5] = 3
+    else:
+      seg_mask[seg_mask == 5] = 0
+      seg_mask[seg_mask > 0] = 1
+      
+  
     if self.mode == "3d":
       ct_scan = scipy.ndimage.interpolation.zoom(ct_scan, [self.scan_size[0]/float(len(ct_scan)) , self.scan_size[1]/512., self.scan_size[2]/512.], mode = "nearest")
       seg_mask = scipy.ndimage.interpolation.zoom(seg_mask, [self.scan_size[0]/float(len(seg_mask)) , self.scan_size[1]/512., self.scan_size[2]/512.], mode = "nearest")
