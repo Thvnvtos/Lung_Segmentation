@@ -65,6 +65,9 @@ for epoch in range(epochs):
     optimizer.step()
     print("Epoch {} ==> Batch {} mean loss : {}".format(epoch+1, (i+1)%(val_steps), loss.item()/batch_size))
     epoch_loss += loss.item()/batch_size
+    del batch
+    del labels
+    torch.cuda.empty_cache()
     if (i+1)%val_steps == 0:
       print("===================> Calculating validation loss ... ")
       ids = np.random.randint(0, len(val_data), val_size)
