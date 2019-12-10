@@ -1,5 +1,6 @@
 {
   "mode" : "3d",
+  
   "path" :
     {
       "scans" : "/powerai/data/retina-unet/data/LIDC-IDRI",
@@ -14,10 +15,10 @@
       "lr" : 1e-4,
       "start_filters" : 32,
       "scan_size" : [128, 256, 256],
-      "train_size" : 700,
+      "train_size" : 800,
       "validation_steps" : 30,
-      "validation_size" : 30,
-      "n_classes" : 3
+      "validation_size" : 50,
+      "n_classes" : 1
     },
 
   "train2d" :

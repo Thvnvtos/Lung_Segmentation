@@ -14,7 +14,6 @@ torch.backends.cudnn.benchmark = True
 with open("config.json") as f:
   config = json.load(f)
 
-
 device = torch.device("cuda:0")
 
 with open(config["path"]["labelled_list"], "rb") as f:
@@ -87,6 +86,4 @@ for epoch in range(epochs):
         torch.save(unet.state_dict(), "./model")
         best_val_loss = val_loss
       print("\n")
-  # Print Here Epoch loss and Val loss 
-  #print("=========> Epoch {} : {}".format(epoch+1, epoch_loss/(len(dataset)/batch_size)))
 

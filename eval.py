@@ -18,43 +18,22 @@ with open(config["path"]["labelled_list"], "rb") as f:
   list_scans = pickle.load(f)
 
 st_scans = [s.split('/')[1] for s in list_scans]
-st_scans = st_scans[800:]
+st_scans = st_scans[850:]
 print(st_scans[0])
-
 
 dataset = dataset.Dataset(st_scans, config["path"]["scans"], config["path"]["masks"], mode="3d")
 
 criterion = utils.dice_loss
-unet = model.UNet(1,1, config["train3d"]["start_filters"]).to(device)
+unet = model.UNet(1,config["train3d"]["n_classes"], config["train3d"]["start_filters"]).to(device)
 unet.load_state_dict(torch.load("./model"))
 
 for i in range(len(dataset)):
     X,y = dataset.__getitem__(i)
-    nrrd.write("orig_mask.nrrd",y)
-    xx = np.squeeze(X)
     X = torch.Tensor(np.array([X.astype(np.float16)])).to(device)
     y = torch.Tensor(np.array([y.astype(np.float16)])).to(device)
     logits = unet(X)
-    logits[logits < 0.5] = 0
-    logits[logits >= 0.5] = 1
     loss = criterion(logits, y)
     print(loss.item())
     mask = logits.cpu().detach().numpy()
     nrrd.write("mask3D.nrrd", mask[0][0])
-  
-    #mask = []
-    """ 
-           for j in range(len(X)):
-            logits = unet(X[j:j+1])
-              logits[logits < 0.5] = 0
-              logits[logits >= 0.5] = 1
-              mask.append(logits.cpu().detach().numpy())
-              loss = criterion(logits, y[j:j+1])
-              print(loss.item())"""
-    """
-    mask = np.concatenate(mask)
-          mask = np.squeeze(mask)
-          nrrd.write("ct.nrrd",xx)
-          nrrd.write("mask.nrrd",mask)
-    """
     break

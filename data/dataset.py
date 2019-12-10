@@ -39,7 +39,7 @@ class Dataset(data.Dataset):
       seg_mask[seg_mask == 4] = 2
       seg_mask[seg_mask == 5] = 3
     else:
-      seg_mask[seg_mask == 5] = 0
+      seg_mask[seg_mask <= 0] = 0
       seg_mask[seg_mask > 0] = 1
       
   
